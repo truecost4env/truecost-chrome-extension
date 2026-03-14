@@ -1,5 +1,21 @@
-.tmp/
-bower_components/
-dist/
-node_modules/
+# OS
+.DS_Store
+Thumbs.db
 
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Chrome extension development
+*.crx
+*.pem
+*.zip
+
+# Node (if added later)
+node_modules/
+package-lock.json
+
+# Build artifacts
+dist/

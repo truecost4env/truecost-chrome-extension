@@ -1,0 +1,246 @@
+/* ============================================================
+   TrueCost — Popup Styles
+   Glassmorphism dark theme dashboard
+   ============================================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 340px;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #0b1219;
+  color: #e8edf2;
+  overflow-x: hidden;
+}
+
+.popup {
+  min-height: 100%;
+}
+
+/* ---- Header ---- */
+.popup-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 18px 14px;
+  background: linear-gradient(135deg, rgba(52,211,153,0.1) 0%, transparent 70%);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.popup-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #059669, #34d399);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 3px 12px rgba(52,211,153,0.25);
+}
+
+.popup-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #34d399;
+  letter-spacing: 0.3px;
+}
+
+.popup-version {
+  font-size: 10px;
+  color: #6b7f8e;
+  margin-top: 1px;
+}
+
+/* ---- Toggle ---- */
+.popup-toggle {
+  margin-left: auto;
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.popup-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.popup-toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #2a3744;
+  border-radius: 24px;
+  transition: background 0.3s;
+}
+
+.popup-toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+.popup-toggle input:checked + .popup-toggle-slider {
+  background: #059669;
+}
+
+.popup-toggle input:checked + .popup-toggle-slider::before {
+  transform: translateX(18px);
+}
+
+/* ---- Stats Grid ---- */
+.popup-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 16px 18px 12px;
+}
+
+.stat-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+}
+
+.stat-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.stat-card--carbon .stat-icon { background: rgba(96,165,250,0.12); }
+.stat-card--carbon .stat-icon svg { fill: #60a5fa; }
+.stat-card--carbon .stat-value { color: #60a5fa; }
+
+.stat-card--water .stat-icon { background: rgba(45,212,191,0.12); }
+.stat-card--water .stat-icon svg { fill: #2dd4bf; }
+.stat-card--water .stat-value { color: #2dd4bf; }
+
+.stat-card--waste .stat-icon { background: rgba(248,113,113,0.12); }
+.stat-card--waste .stat-icon svg { fill: #f87171; }
+.stat-card--waste .stat-value { color: #f87171; }
+
+.stat-card--energy .stat-icon { background: rgba(251,191,36,0.12); }
+.stat-card--energy .stat-icon svg { fill: #fbbf24; }
+.stat-card--energy .stat-value { color: #fbbf24; }
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: #6b7f8e;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-top: 4px;
+}
+
+/* ---- Summary ---- */
+.popup-summary {
+  display: flex;
+  gap: 12px;
+  padding: 12px 18px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.summary-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.summary-label {
+  font-size: 10px;
+  color: #6b7f8e;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.summary-value {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.summary-value--green {
+  color: #34d399;
+}
+
+/* ---- Actions ---- */
+.popup-actions {
+  padding: 14px 18px;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn--reset {
+  background: rgba(248,113,113,0.1);
+  color: #f87171;
+  border: 1px solid rgba(248,113,113,0.15);
+}
+
+.btn--reset:hover {
+  background: rgba(248,113,113,0.2);
+  transform: translateY(-1px);
+}
+
+/* ---- Footer ---- */
+.popup-footer {
+  text-align: center;
+  font-size: 9px;
+  color: #4a5b6a;
+  padding: 8px 18px 16px;
+  line-height: 1.5;
+}
+
+.popup-footer a {
+  color: #34d399;
+  text-decoration: none;
+}
+
+.popup-footer a:hover {
+  text-decoration: underline;
+}
