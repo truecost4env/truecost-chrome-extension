@@ -1,6 +1,7 @@
 /**
  * TrueCost — Content Script
  * Injects environmental impact cards into Amazon product pages.
+ * Features: impact card, eco-friendly alternatives, category fallbacks.
  * Vanilla JS, no jQuery. Uses MutationObserver for dynamic page loads.
  */
 
@@ -14,30 +15,33 @@
     energy: `<svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>`,
     water: `<svg viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8C4 18.78 7.8 22 12 22s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8z"/></svg>`,
     waste: `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`,
-    ozone: `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><circle cx="12" cy="12" r="5"/></svg>`
+    ozone: `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><circle cx="12" cy="12" r="5"/></svg>`,
+    sparkle: `<svg viewBox="0 0 24 24"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61z"/></svg>`
   };
 
   const IMPACT_META = [
-    { key: 'greenhouse_footprint', icon: 'carbon', label: 'Carbon',  color: 'carbon'  },
-    { key: 'energy_footprint',     icon: 'energy', label: 'Energy',  color: 'energy'  },
-    { key: 'water_footprint',      icon: 'water',  label: 'Water',   color: 'water'   },
-    { key: 'waste_footprint',      icon: 'waste',  label: 'Waste',   color: 'waste'   },
-    { key: 'ozone_footprint',      icon: 'ozone',  label: 'Ozone',   color: 'ozone'   }
+    { key: 'greenhouse_footprint', icon: 'carbon', label: 'Carbon',  color: 'carbon',  settingKey: 'showCarbon' },
+    { key: 'energy_footprint',     icon: 'energy', label: 'Energy',  color: 'energy',  settingKey: 'showEnergy' },
+    { key: 'water_footprint',      icon: 'water',  label: 'Water',   color: 'water',   settingKey: 'showWater'  },
+    { key: 'waste_footprint',      icon: 'waste',  label: 'Waste',   color: 'waste',   settingKey: 'showWaste'  },
+    { key: 'ozone_footprint',      icon: 'ozone',  label: 'Ozone',   color: 'ozone',   settingKey: 'showOzone'  }
   ];
+
+  let currentSettings = {
+    showCarbon: true, showWater: true, showWaste: true,
+    showEnergy: true, showOzone: true, showAlternatives: true
+  };
 
   /* ---- Utility helpers ---- */
 
   /** Extract ASIN from URL or page. */
   function getASIN() {
-    // Try URL patterns: /dp/ASIN or /gp/product/ASIN
     const urlMatch = location.pathname.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})/i);
     if (urlMatch) return urlMatch[1].toUpperCase();
 
-    // Fallback: hidden input
     const input = document.getElementById('ASIN');
     if (input) return input.value.toUpperCase();
 
-    // Fallback: detail bullets
     const bulletSpans = document.querySelectorAll('#detailBullets_feature_div span');
     for (const span of bulletSpans) {
       if (span.textContent.includes('ASIN')) {
@@ -45,7 +49,6 @@
         if (next) return next.textContent.trim().toUpperCase();
       }
     }
-
     return null;
   }
 
@@ -53,6 +56,31 @@
   function getTitle() {
     const el = document.getElementById('productTitle') || document.getElementById('title');
     return el ? el.textContent.trim() : '';
+  }
+
+  /**
+   * Find eco-friendly alternatives — products in the same category
+   * with a lower total footprint cost.
+   */
+  function findAlternatives(product, isEstimate) {
+    if (isEstimate || !product.category) return [];
+
+    const currentCost = product.total_footprint_cost || Infinity;
+    const alts = [];
+
+    for (const [asin, p] of Object.entries(TRUECOST_PRODUCTS)) {
+      if (p === product) continue;
+      if (p.category !== product.category) continue;
+      if ((p.total_footprint_cost || Infinity) < currentCost) {
+        const savings = currentCost - p.total_footprint_cost;
+        const pct = Math.round((savings / currentCost) * 100);
+        alts.push({ asin, name: p.name, cost: p.total_footprint_cost, savings, pct });
+      }
+    }
+
+    // Sort by biggest savings, limit to 2
+    alts.sort((a, b) => b.savings - a.savings);
+    return alts.slice(0, 2);
   }
 
   /** Build one impact row element. */
@@ -75,9 +103,37 @@
     return item;
   }
 
+  /** Build the eco-alternatives section. */
+  function buildAlternatives(alts) {
+    if (!alts.length) return null;
+
+    const section = document.createElement('div');
+    section.className = 'truecost-alternatives';
+
+    const header = document.createElement('div');
+    header.className = 'truecost-alt-header';
+    header.innerHTML = `
+      <span class="truecost-alt-icon">${ICONS.sparkle}</span>
+      <span>Greener Alternatives</span>
+    `;
+    section.appendChild(header);
+
+    for (const alt of alts) {
+      const row = document.createElement('a');
+      row.className = 'truecost-alt-item';
+      row.href = `https://${location.hostname}/dp/${alt.asin}`;
+      row.innerHTML = `
+        <span class="truecost-alt-name">${alt.name}</span>
+        <span class="truecost-alt-badge">↓ ${alt.pct}% impact</span>
+      `;
+      section.appendChild(row);
+    }
+
+    return section;
+  }
+
   /** Build the full TrueCost card. */
-  function buildCard(data, isEstimate, label) {
-    const product = data;
+  function buildCard(product, isEstimate, label, settings) {
     const card = document.createElement('div');
     card.className = 'truecost-card';
 
@@ -100,6 +156,9 @@
 
     let itemCount = 0;
     for (const meta of IMPACT_META) {
+      // Respect settings — skip disabled categories
+      if (settings[meta.settingKey] === false) continue;
+
       const footprint = product[meta.key];
       const item = buildImpactItem(meta, footprint);
       if (item) {
@@ -108,7 +167,6 @@
       }
     }
 
-    // If odd number of items, add a spacer for grid alignment
     if (itemCount % 2 !== 0) {
       const spacer = document.createElement('div');
       spacer.className = 'truecost-impact-item';
@@ -117,6 +175,13 @@
     }
 
     card.appendChild(grid);
+
+    // Eco-friendly alternatives
+    if (settings.showAlternatives !== false) {
+      const alts = findAlternatives(product, isEstimate);
+      const altSection = buildAlternatives(alts);
+      if (altSection) card.appendChild(altSection);
+    }
 
     // Footer — Donate checkbox
     const cost = product.total_footprint_cost || 0;
@@ -134,11 +199,8 @@
 
     const checkbox = footer.querySelector('.truecost-checkbox');
     checkbox.addEventListener('change', () => {
-      const donation = checkbox.checked ? cost : 0;
-      chrome.storage.local.set({ lastDonation: donation });
+      chrome.storage.local.set({ lastDonation: checkbox.checked ? cost : 0 });
     });
-
-    // Set initial donation value
     chrome.storage.local.set({ lastDonation: cost });
 
     card.appendChild(footer);
@@ -154,23 +216,18 @@
 
   /** Inject the card near the Add to Cart button. */
   function inject() {
-    // Don't inject twice
     if (document.querySelector('.truecost-card')) return;
-
-    // Are we on a product page?
     if (!/\/(?:dp|gp\/product)\//i.test(location.pathname)) return;
 
     const asin = getASIN();
     const title = getTitle();
-
-    if (!asin && !title) return; // Can't identify product
+    if (!asin && !title) return;
 
     const { product, isEstimate, label } = TrueCostData.lookup(asin, title);
     if (!product) return;
 
-    const card = buildCard(product, isEstimate, label);
+    const card = buildCard(product, isEstimate, label, currentSettings);
 
-    // Find the best insertion point
     const anchors = [
       '#addToCart',
       '#add-to-cart-button',
@@ -186,21 +243,26 @@
     }
 
     if (target) {
-      // Insert after the target container
       target.parentNode.insertBefore(card, target.nextSibling);
     }
 
     // Notify background about this product view
+    const category = isEstimate
+      ? TrueCostData.guessCategory(title)
+      : (product.category || 'unknown');
+
     chrome.runtime.sendMessage({
       type: 'PRODUCT_VIEWED',
       product: {
         name: isEstimate ? label : product.name,
+        category,
         isEstimate,
         greenhouse: product.greenhouse_footprint?.usage || 0,
         water: product.water_footprint?.usage || 0,
         waste: product.waste_footprint?.usage || 0,
         energy: product.energy_footprint?.usage || 0,
-        cost: product.total_footprint_cost || 0
+        cost: product.total_footprint_cost || 0,
+        url: location.href
       }
     });
   }
@@ -211,19 +273,19 @@
     const observer = new MutationObserver(() => {
       if (location.href !== lastUrl) {
         lastUrl = location.href;
-        // Amazon navigated — remove old card and re-inject
         const old = document.querySelector('.truecost-card');
         if (old) old.remove();
         setTimeout(inject, 800);
       }
     });
-
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  // Check extension enabled state, then run
-  chrome.storage.local.get({ enabled: true }, (result) => {
-    if (!result.enabled) return;
+  // Load settings then run
+  chrome.storage.local.get({ settings: currentSettings, enabled: true }, (result) => {
+    if (result.settings) currentSettings = result.settings;
+    if (result.enabled === false && result.settings?.enabled === undefined) return;
+    if (result.settings?.enabled === false) return;
     inject();
     observePageChanges();
   });

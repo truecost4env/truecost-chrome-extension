@@ -9,7 +9,11 @@ Originally built at the [2016 CleanWeb Hackathon](http://devpost.com/software/tr
 - 🌿 **Impact Card** — injected directly into Amazon product pages near "Add to Cart"
 - 📊 **38+ products** across 10 categories (shoes, electronics, clothing, furniture, single-use items, etc.)
 - ♻️ **Category fallback** — shows estimated impact for products not in the database
-- 📈 **Dashboard popup** — tracks cumulative environmental impact across your browsing session
+- 📈 **Dashboard popup** — tracks cumulative environmental impact with bar chart visualization
+- 📜 **Product history** — timestamped log of every product you've viewed
+- ⭐ **Eco alternatives** — suggests greener products in the same category with % impact reduction
+- 🌍 **16 Amazon regions** — works on amazon.com, .co.uk, .ca, .de, .fr, .it, .es, .co.jp, .in, .com.br, .com.au, .com.mx, .nl, .sg, .se, .pl
+- ⚙️ **Options page** — toggle individual impact categories and configure history length
 - 🎚️ **Enable/disable toggle** — turn the overlay on or off from the popup
 - 💚 **Donate checkbox** — opt-in to offset your environmental impact
 
@@ -57,18 +61,23 @@ Originally built at the [2016 CleanWeb Hackathon](http://devpost.com/software/tr
 ```
 truecost-chrome-extension/
 ├── manifest.json           # Manifest V3 extension config
+├── LICENSE                 # MIT license
 ├── icons/                  # Extension icons (16, 48, 128px)
 ├── data/
 │   └── products.js         # Product database + category estimates
 ├── src/
-│   ├── content.js          # Content script injected on Amazon
-│   ├── content.css         # Impact card styles
+│   ├── content.js          # Content script (impact card + alternatives)
+│   ├── content.css         # Impact card + alternatives styles
 │   ├── data.js             # Product lookup module
-│   └── background.js       # Service worker for stats tracking
-└── popup/
-    ├── popup.html          # Dashboard popup UI
-    ├── popup.css           # Popup styles
-    └── popup.js            # Popup logic
+│   └── background.js       # Service worker (stats + history)
+├── popup/
+│   ├── popup.html          # Dashboard popup (tabs, chart, history)
+│   ├── popup.css           # Popup styles
+│   └── popup.js            # Popup logic
+└── options/
+    ├── options.html         # Settings page
+    ├── options.css          # Settings styles
+    └── options.js           # Settings logic
 ```
 
 ## Data Sources

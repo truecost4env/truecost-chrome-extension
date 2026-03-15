@@ -164,6 +164,71 @@
   margin-top: 1px;
 }
 
+/* ---- Eco Alternatives ---- */
+.truecost-alternatives {
+  border-top: 1px solid var(--tc-border);
+  padding: 12px 16px;
+  background: rgba(52, 211, 153, 0.03);
+}
+
+.truecost-alt-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--tc-green);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.truecost-alt-icon {
+  display: flex;
+  align-items: center;
+}
+
+.truecost-alt-icon svg {
+  width: 14px;
+  height: 14px;
+  fill: var(--tc-green);
+}
+
+.truecost-alt-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  background: var(--tc-bg-glass);
+  border: 1px solid var(--tc-border);
+  border-radius: var(--tc-radius-sm);
+  text-decoration: none;
+  color: var(--tc-text);
+  transition: all var(--tc-transition);
+}
+
+.truecost-alt-item:hover {
+  background: rgba(52, 211, 153, 0.08);
+  border-color: rgba(52, 211, 153, 0.2);
+  transform: translateX(2px);
+}
+
+.truecost-alt-name {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.truecost-alt-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--tc-green);
+  background: var(--tc-green-dim);
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
 /* ---- Footer / Donate ---- */
 .truecost-footer {
   padding: 14px 18px;
